@@ -1,0 +1,28 @@
+.dashboard-container {
+  width: 100%;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 15px;
+  border: 1px solid #292929;
+  text-align: left;
+}
+
+th {
+  background-color: #232323;
+}
+
+.open-link { 
+  color: #ffffff;
+  margin-left: 15px;
+  
+}
+.manage{
+  color: #ffffff;
+}
