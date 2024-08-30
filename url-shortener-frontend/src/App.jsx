@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from '../../shorten-frontend/src/Pages/Home/Home';
-import NotFound from '../../shorten-frontend/src/Pages/NotFound/NotFound';
-import Create from '../../shorten-frontend/src/Components/Create/Create';
-import Manage from '../../shorten-frontend/src/Components/Manage/Manage';
+import Home from './Pages/Home/Home';
+import NotFound from './Pages/NotFound/NotFound';
+import Create from './Components/Create/Create';
+import Manage from './Components/Manage/Manage';
 
 
 function App() {
