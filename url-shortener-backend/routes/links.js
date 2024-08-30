@@ -1,4 +1,3 @@
-// routes/links.js
 const express = require('express');
 const router = express.Router();
 const connection = require('../db');
@@ -16,7 +15,7 @@ router.get('/', (req, res) => {
 
 // POST create a new link
 router.post('/', (req, res) => {
-  const { name, description, alias, destinationUrl, created_at, scans, clicks } = req.body;
+  const { name, description, alias, destinationUrl, created_at = new Date(), scans = 0, clicks = 0 } = req.body;
 
   if (!name || !alias || !destinationUrl) {
     return res.status(400).json({ error: 'Name, alias, and destination URL are required' });
@@ -24,6 +23,7 @@ router.post('/', (req, res) => {
   if (typeof name !== 'string' || typeof alias !== 'string' || typeof destinationUrl !== 'string') {
     return res.status(400).json({ error: 'Invalid input types' });
   }
+
   const checkQuery = 'SELECT * FROM links WHERE alias = ?';
   connection.query(checkQuery, [alias], (err, results) => {
     if (err) {
@@ -32,7 +32,7 @@ router.post('/', (req, res) => {
     }
 
     if (results.length > 0) {
-      return res.status(400).json({ message: 'This Endpoint Already Taken. Change your Endpoint' });
+      return res.status(400).json({ message: 'This alias is already taken. Please choose a different alias.' });
     }
 
     const query = 'INSERT INTO links (name, description, alias, destinationUrl, created_at, scans, clicks) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -46,8 +46,7 @@ router.post('/', (req, res) => {
   });
 });
 
-
-// PUT update click count
+// GET and update click count
 router.get('/:alias', (req, res) => {
   const { alias } = req.params;
   const updateQuery = 'UPDATE links SET clicks = clicks + 1 WHERE alias = ?';
@@ -72,17 +71,17 @@ router.get('/:alias', (req, res) => {
   });
 });
 
-
+// Increment scan count
 router.get('/scan/:alias', (req, res) => {
   const { alias } = req.params;
   const query = 'UPDATE links SET scans = scans + 1 WHERE alias = ?';
-  
+
   connection.query(query, [alias], (err) => {
     if (err) {
-      console.error('Error updating click count:', err);
-      return res.status(500).json({ error: 'An error occurred while updating click count' });
+      console.error('Error updating scan count:', err);
+      return res.status(500).json({ error: 'An error occurred while updating scan count' });
     }
-    res.status(200).json({ message: 'Click count updated successfully' });
+    res.status(200).json({ message: 'Scan count updated successfully' });
   });
 });
 
@@ -100,64 +99,46 @@ router.delete('/:alias', (req, res) => {
   });
 });
 
-//Get a single data
-router.get('/id/:id', async (req, res) => {
+// GET a single link by ID
+router.get('/id/:id', (req, res) => {
   const { id } = req.params;
-  if (!id) {
+  if (!id || isNaN(id)) {
     return res.status(400).json({ error: 'Invalid ID' });
   }
 
-  try {
-    const query = 'SELECT * FROM links WHERE id = ?';
-    connection.query(query, [id], (error, results) => {
-      if (error) {
-        console.error('Error executing query:', error);
-        return res.status(500).json({ error: 'Database query failed' });
-      }
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Link not found' });
-      }
-      res.json(results[0]);
-    });
-  } catch (err) {
-    console.error('Error in route handler:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
+  const query = 'SELECT * FROM links WHERE id = ?';
+  connection.query(query, [id], (error, results) => {
+    if (error) {
+      console.error('Error executing query:', error);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Link not found' });
+    }
+    res.json(results[0]);
+  });
 });
 
-
-router.put('/:id', async (req, res) => {
+// UPDATE a link by ID
+router.put('/:id', (req, res) => {
   const { id } = req.params;
-  const { name, description, alias, destinationUrl, created_at } = req.body;
+  const { name, description, alias, destinationUrl } = req.body;
 
-  if (!name || !description || !alias || !destinationUrl || !created_at) {
-    return res.status(400).json({ message: 'All fields are required' });
+  if (!name || !alias || !destinationUrl) {
+    return res.status(400).json({ message: 'Name, alias, and destination URL are required' });
   }
 
-  try {
-    const updateQuery = `
-      UPDATE links
-      SET name = ?, description = ?, alias = ?, destinationUrl = ?
-      WHERE id = ?
-    `;
-    const values = [name, description, alias, destinationUrl, id];
-
-    connection.query(updateQuery, values, (error, results) => {
-      if (error) {
-        console.error("Error updating record:", error);
-        return res.status(500).json({ message: 'Error updating record' });
-      }
-
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ message: 'Record not found' });
-      }
-
-      res.status(200).json({ message: 'Record updated successfully' });
-    });
-  } catch (error) {
-    console.error("Unexpected error:", error);
-    res.status(500).json({ message: 'Unexpected error occurred' });
-  }
+  const updateQuery = 'UPDATE links SET name = ?, description = ?, alias = ?, destinationUrl = ? WHERE id = ?';
+  connection.query(updateQuery, [name, description, alias, destinationUrl, id], (error, results) => {
+    if (error) {
+      console.error("Error updating record:", error);
+      return res.status(500).json({ message: 'Error updating record' });
+    }
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: 'Record not found' });
+    }
+    res.status(200).json({ message: 'Record updated successfully' });
+  });
 });
 
 module.exports = router;
