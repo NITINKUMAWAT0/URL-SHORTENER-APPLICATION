@@ -45,7 +45,7 @@ const Create = () => {
       }
     } catch (error) {
       console.log(error)
-      setAlert({ message: 'Error submitting the form.', type: 'error' });
+      setAlert({ message: 'Url already exits, try another one!', type: 'error' });
     }
   };
   
