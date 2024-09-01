@@ -6,7 +6,7 @@ const Navbar = () => {
   return (
     <div className='Navbar'>
       <h1 className='nav-title'>Short Links</h1>
-      <Link to="/link_creation" className="create">
+      <Link to="/create" className="create">
         <span>Create<AddIcon className='add-icon' fontSize='10' /></span>
       </Link>
     </div>
