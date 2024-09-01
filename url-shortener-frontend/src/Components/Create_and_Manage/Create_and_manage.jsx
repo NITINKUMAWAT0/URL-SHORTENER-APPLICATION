@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import QRCode from 'qrcode';
+import { TextField, Button, Typography, Alert, Box, Container, Paper } from '@mui/material'; // Import MUI components
 import './Create_and_manage.scss'; // Combine styles into one file
 
 const ManageCreate = () => {
@@ -49,35 +50,33 @@ const ManageCreate = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (isEditing) {
-      // Edit Mode: Update the existing link
-      try {
+    try {
+      if (isEditing) {
+        // Edit Mode: Update the existing link
         await axios.put(`http://localhost:5000/api/links/${id}`, formData);
         setAlert({ message: 'Changes saved successfully', type: 'success' });
-        setEditingAlertTimeout();
-      } catch (error) {
-        console.log(error);
-        setAlert({ message: 'Error saving data', type: 'error' });
-        setEditingAlertTimeout();
-      }
-    } else {
-      // Create Mode: Create a new link
-      try {
+      } else {
+        // Create Mode: Create a new link
         const formattedDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
         const response = await axios.post('http://localhost:5000/api/links', {
           ...formData,
           created_at: formattedDate,
         });
+
         if (response.status === 201) {
           setAlert({ message: response.data.message, type: 'success' });
-          setTimeout(() => navigate('/', { state: { message: 'New link created successfully!' } }), 2000);
         } else {
           setAlert({ message: response.data.message, type: 'error' });
+          return;
         }
-      } catch (error) {
-        console.log(error);
-        setAlert({ message: 'Url already exists, try another one!', type: 'error' });
       }
+
+      // After successful operation, navigate to the homepage
+      setTimeout(() => navigate('/'), 2000);
+
+    } catch (error) {
+      console.log(error);
+      setAlert({ message: isEditing ? 'Error saving data' : 'Url already exists, try another one!', type: 'error' });
     }
   };
 
@@ -92,84 +91,86 @@ const ManageCreate = () => {
   };
 
   return (
-    <div className="manage-create-container">
-      <header className="manage-create-header">
-        <h1>{isEditing ? 'Edit Link' : 'Create Link'}</h1>
-      </header>
+    <Container maxWidth="sm" sx={{ mt: 1 }}>
+      <Paper elevation={3} sx={{ p: 2 }} >
+        <Typography variant="h4" component="h1" gutterBottom>
+          {isEditing ? 'Manage Link' : 'Create Link'}
+        </Typography>
 
-      {alert.message && (
-        <div className={`alert ${alert.type}`}>
-          {alert.message}
-        </div>
-      )}
+        {alert.message && (
+          <Alert severity={alert.type} sx={{ mb: 2 }}>
+            {alert.message}
+          </Alert>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">Name:</label>
-          <input
-            type="text"
-            id="name"
+        <form onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Name"
             name="name"
             value={formData.name}
             onChange={handleChange}
             required
           />
-        </div>
-        <div>
-          <label htmlFor="description">Description:</label>
-          <textarea
-            id="description"
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Description"
             name="description"
             value={formData.description}
             onChange={handleChange}
+            multiline
+            rows={4}
             required
           />
-        </div>
-        <div>
-          <label htmlFor="alias">Short URL Endpoint:</label>
-          <input
-            type="text"
-            id="alias"
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Short URL Endpoint"
             name="alias"
             value={formData.alias}
             onChange={handleChange}
             placeholder='http://localhost:5000/'
             required
           />
-        </div>
-        <div>
-          <label htmlFor="destinationUrl">Destination URL:</label>
-          <input
-            type="url"
-            id="destinationUrl"
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Destination URL"
             name="destinationUrl"
             value={formData.destinationUrl}
             onChange={handleChange}
             required
           />
-        </div>
 
-        {isEditing && (
-          <>
-            <div className="info-row">
-              <label>Created At:</label>
-              <p>{new Date(formData.created_at).toLocaleString()}</p>
-            </div>
-            <div className="info-row stats">
-              <p>Clicks: {formData.clicks}</p>
-              <p>Scans: {formData.scans}</p>
-            </div>
-            <div className="qr-code">
-              <img src={qrCodeImg} alt="QR Code" />
-            </div>
-          </>
-        )}
+          {isEditing && (
+            <Box mt={3}>
+              <Typography variant="body1">
+                Created At: {new Date(formData.created_at).toLocaleString()}
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                <Typography variant="body2">Clicks: {formData.clicks}</Typography>
+                <Typography variant="body2">Scans: {formData.scans}</Typography>
+              </Box>
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <img src={qrCodeImg} alt="QR Code" />
+              </Box>
+            </Box>
+          )}
 
-        <button className="save-btn" type="submit">
-          {isEditing ? 'Save' : 'Create'}
-        </button>
-      </form>
-    </div>
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            type="submit"
+            sx={{ mt: 3 }}
+          >
+            {isEditing ? 'Save' : 'Create'}
+          </Button>
+        </form>
+      </Paper>
+    </Container>
   );
 };
 
